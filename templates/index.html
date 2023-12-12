@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Doodle Dreamer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="main-container">
+    <div class="left-section">
+        <h1 id="mainHeader">Doodle Dreamer</h1>
+        <p>Draw your dream, let AI transform it!</p>
+        <div id="canvas-container">
+            <canvas id="canvas" width="400" height="400" style="border: 1px solid;"></canvas>
+        </div>
+        <div id="drawModes">
+            <button id="eraserButton">Eraser</button>
+            <button id="drawButton">Draw</button>
+            <button id="clearButton">Clear</button>
+        </div>
+        <div id="transformMode">
+            <label for="intensitySlider">Faithfulness to Source Image: </label>
+            <input type="range" id="intensitySlider" name="intensityLevel" min="0" max="1" step="0.01" value="0.45">
+            <span id="intensityDisplay">0.45</span>
+            <br>
+            <label for="iterationSlider">Number of Iterations: </label>
+            <input type="range" id="iterationSlider" name="iterationCount" min="2" max="6" step="1" value="4">
+            <span id="iterationDisplay">4</span>
+            <br>
+            <button id="submit">Transform Image</button>
+        </div>
+    </div>
+    <div class="right-section">
+        <h1 id="mainHeader">Resulting Image</h1>
+        <!-- Placeholder for the result image -->
+<img id="result-image" src="static/question_mark.png" alt="Transformed Image" style="max-width:400px; max-height:400px;">
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let eraserMode = false;
+    let drawing = false;
+
+    function getPos(e) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX || e.touches[0].clientX) - rect.left,
+            y: (e.clientY || e.touches[0].clientY) - rect.top
+        };
+    }
+
+    function draw(x, y) {
+        ctx.lineWidth = eraserMode ? 15 : 5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = eraserMode ? 'white' : 'black';
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+    }
+
+    function startDrawing(e) {
+        e.preventDefault();
+        drawing = true;
+        var pos = getPos(e);
+        ctx.moveTo(pos.x, pos.y);
+        ctx.beginPath();
+    }
+
+    function stopDrawing() {
+        if (!drawing) return;
+        drawing = false;
+        ctx.beginPath();
+        sendImageToServer(); // Automatically send image to server after drawing
+    }
+
+    function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        var pos = getPos(e);
+        draw(pos.x, pos.y);
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mousemove', move);
+    canvas.addEventListener('touchstart', startDrawing, false);
+    canvas.addEventListener('touchend', stopDrawing, false);
+    canvas.addEventListener('touchmove', move, false);
+
+const eraserButton = document.getElementById("eraserButton");
+const drawButton = document.getElementById("drawButton");
+
+eraserButton.addEventListener("click", () => {
+    console.log("eraser clicked")
+    eraserMode = true;
+    eraserButton.classList.add('highlight');
+    drawButton.classList.remove('highlight');
+});
+
+drawButton.addEventListener("click", () => {
+    eraserMode = false;
+    drawButton.classList.add('highlight');
+    eraserButton.classList.remove('highlight');
+});
+
+
+
+    const clearButton = document.getElementById("clearButton");
+    clearButton.addEventListener("click", () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById("result-image").src = "static/question_mark.png"; // Reset the result image
+    });
+
+
+function handleImageUpload(event) {
+    const fileInput = event.target;
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    const image = new Image();
+    image.onload = () => {
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    };
+
+    const file = fileInput.files[0];
+    if (file) {
+        const imageURL = URL.createObjectURL(file);
+        image.src = imageURL;
+    }
+}
+
+$('#intensitySlider').on('input', function() {
+    $('#intensityDisplay').text($(this).val());
+});
+
+$('#iterationSlider').on('input', function() {
+    $('#iterationDisplay').text($(this).val());
+});
+
+function sendImageToServer() {
+    
+            const intensityLevel = $("#intensitySlider").val();
+            const iterationCount = $("#iterationSlider").val();
+            const dataURL = canvas.toDataURL("image/png");
+            const base64Image = dataURL.split(',')[1];
+
+            $.ajax({
+                type: 'POST',
+                url: '/transform',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    imageBase64: base64Image,
+                    intensityLevel: intensityLevel,
+                    iterationCount: iterationCount
+                }),
+                success: function(response) {
+                    const img_str = 'data:image/png;base64,' + response.result_image;
+                    $("#result-image").attr("src", img_str).show();
+                },
+                error: function(error) {
+                    console.log(error);
+                }
+            });
+        }
+    
+    
+$('#submit').click(function() {
+    console.log("Submit button clicked!"); // Log statement
+    
+    const intensityLevel = $("#intensitySlider").val();
+    const iterationCount = $("#iterationSlider").val();
+    const dataURL = canvas.toDataURL("image/png");
+    const base64Image = dataURL.split(',')[1];  // Only the Base64 content
+
+    $.ajax({
+        type: 'POST',
+        url: '/transform',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            imageBase64: base64Image,
+            intensityLevel: intensityLevel, // Include the intensity level
+            iterationCount: iterationCount  // Include the iteration count
+        }),
+        success: function(response) {
+            const img_str = 'data:image/png;base64,' + response.result_image;
+            $("#result-image").attr("src", img_str).show();
+        },
+        error: function(error) {
+            console.log(error);
+        }
+    });
+});
+
+</script>
+
+</body>
+</html>
+
+<style>
+    
+    #mainHeader {
+        text-align: center;
+        color: #4A90E2; /* Example color */
+        font-family: 'Comic Sans MS'; /* Example font */
+    }
+    #canvas-container {
+        position: relative;
+        text-align: center;
+        margin: auto;
+    }
+    
+    .highlight {
+    background-color: yellow;
+}
+
+
+    #drawModes {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    #transformMode {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    #canvas {
+        border: 1px solid black;
+    }
+
+    #controls {
+        margin-top: 10px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #controls button {
+        margin: 5px;
+        display: block;
+    }
+
+    #eraserButton {
+        margin: 5px;
+    }
+
+    #drawButton {
+        margin: 5px
+    }
+
+    #clearButton {
+        margin: 5px;
+    }
+
+    #submit {
+        margin: 5px;
+    }
+
+
+    #mainHeader {
+        text-align: center;
+    }
+    
+    .main-container {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; /* Aligns items to the start of the cross axis */
+    }
+
+    .left-section {
+        flex: 1;
+        text-align: center;
+    }
+
+    .right-section {
+        flex: 1;
+        text-align: center;
+    }
+
+
+    #result-image {
+        max-width: 400px;
+        max-height: 400px;
+    }
+
+
+</style>
