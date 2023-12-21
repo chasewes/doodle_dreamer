@@ -6,7 +6,7 @@ Doodle Dreamer is a web application that transforms user-generated drawings into
 
 Check out this demo to see Doodle Dreamer in action:
 
-![Doodle Dreamer Demo](/assets/demo.mp4)
+https://github.com/chasewes/doodle_dreamer/assets/71714202/e3484adf-1683-4d2c-8f7a-e2b8113831e6
 
 ## Features
 
