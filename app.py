@@ -84,7 +84,7 @@ def transform_image():
             image = background
         image = image.resize((512, 512))
         
-        image.save("input_image.png")
+        # image.save("input_image.png")
 
         prompt = caption_image(cap_processor, cap_model, image, text=caption_text, device=device)
         print(prompt)
@@ -92,7 +92,7 @@ def transform_image():
         prompt = "HD, 4k, Masterpiece, High Quality art inspired by a " + ' '.join(prompt_words[4:])
         print(prompt)
         result_image = generate_image(pipe, prompt, controlnet_conditioning_scale, image, num_steps=num_steps)  # Pass num_steps here
-        result_image.save("result_image.jpg")
+        # result_image.save("result_image.jpg")
 
         buffered = io.BytesIO()
         result_image.save(buffered, format="PNG")

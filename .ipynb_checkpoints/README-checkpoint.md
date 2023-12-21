@@ -1,6 +1,12 @@
 # Doodle Dreamer
 
-Doodle Dreamer is an innovative web application that transforms user-generated drawings into artwork using AI image recognition and image generation technologies. This project integrates technologies like Stable Diffusion, ControlNet, and a Python-based Flask web framework to bring your doodles to life.
+Doodle Dreamer is a web application that transforms user-generated drawings into artwork using AI image recognition and image generation technologies. This project integrates technologies like Stable Diffusion, ControlNet, and a Python-based Flask web framework to bring your doodles to life.
+
+## Demo Video
+
+Check out this demo to see Doodle Dreamer in action:
+
+![Doodle Dreamer Demo](/assets/demo.mp4)
 
 ## Features
 
